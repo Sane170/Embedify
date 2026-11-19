@@ -250,6 +250,18 @@ async function handleInteraction(interaction) {
       });
     }
   }
+
+  if (interaction.isStringSelectMenu() && interaction.customId === "embedify:dashboard-select") {
+    const selected = interaction.values?.[0];
+    if (!selected) {
+      return interaction.reply({ content: "No option was selected.", ephemeral: true });
+    }
+    return interaction.reply({
+      content: `You selected: **${selected.slice(0, 100)}**`,
+      ephemeral: true
+    });
+  }
+
 }
 
 module.exports = { handleInteraction };
