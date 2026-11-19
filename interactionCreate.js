@@ -36,77 +36,146 @@ function canSendEmbed(channel, guild) {
 }
 
 async function handleInteraction(interaction) {
-  if (interaction.isChatInputCommand() && interaction.commandName === "embed") {
-    const subcommand = interaction.options.getSubcommand();
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === "help") {
+      const helpEmbed = new EmbedBuilder()
+        .setColor(BRAND_COLOR)
+        .setTitle("Embedify Help")
+        .setDescription("Everything you need to create and publish custom Discord embeds.")
+        .addFields(
+          {
+            name: "Embed Builder",
+            value: [
+              "`/embed create` — Open the interactive embed builder.",
+              "`/embed preview` — Privately preview an embed.",
+              "`/embed send` — Send a custom embed to a channel.",
+              "`/embed announcement` — Publish a formatted announcement embed."
+            ].join("\n")
+          },
+          {
+            name: "Website",
+            value: "Use `/dashboard` to open the Embedify website and dashboard."
+          }
+        )
+        .setFooter({ text: "Embedify • Made for embeds" })
+        .setTimestamp();
 
-    if (subcommand === "create") {
-      const modal = new ModalBuilder()
-        .setCustomId("embedify:builder")
-        .setTitle("Create an embed");
+      return interaction.reply({ embeds: [helpEmbed], ephemeral: true });
+    }
 
-      const title = new TextInputBuilder()
-        .setCustomId("title")
-        .setLabel("Title (optional)")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false)
-        .setMaxLength(256);
+    if (interaction.commandName === "dashboard") {
+      const dashboardUrl = process.env.DASHBOARD_URL;
 
-      const description = new TextInputBuilder()
-        .setCustomId("description")
-        .setLabel("Description (optional)")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(false)
-        .setMaxLength(4000);
+      if (!dashboardUrl) {
+        return interaction.reply({
+          content: "The Embedify dashboard link hasn't been configured yet. The website is being prepared.",
+          ephemeral: true
+        });
+      }
 
-      const color = new TextInputBuilder()
-        .setCustomId("color")
-        .setLabel("Hex color (optional, e.g. #5865F2)")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false)
-        .setMaxLength(7);
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(dashboardUrl);
+      } catch {
+        return interaction.reply({
+          content: "The dashboard link is currently misconfigured. Please try again later.",
+          ephemeral: true
+        });
+      }
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(title),
-        new ActionRowBuilder().addComponents(description),
-        new ActionRowBuilder().addComponents(color)
+      if (parsedUrl.protocol !== "https:") {
+        return interaction.reply({
+          content: "The dashboard link must use HTTPS. Please try again later.",
+          ephemeral: true
+        });
+      }
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel("Open Embedify Dashboard")
+          .setStyle(ButtonStyle.Link)
+          .setURL(parsedUrl.toString())
       );
-      return interaction.showModal(modal);
-    }
 
-    const title = interaction.options.getString("title");
-    const description = interaction.options.getString(
-      subcommand === "announcement" ? "message" : "description"
-    );
-    const color = parseColor(interaction.options.getString("color"));
-
-    if (color === null) {
       return interaction.reply({
-        content: "Please use a valid six-digit hex color, such as #5865F2.",
+        content: "Open the official Embedify website and dashboard:",
+        components: [row],
         ephemeral: true
       });
     }
 
-    const embed = makeEmbed({ title, description, color });
+    if (interaction.commandName === "embed") {
+      const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand === "preview") {
-      return interaction.reply({ embeds: [embed], ephemeral: true });
-    }
+      if (subcommand === "create") {
+        const modal = new ModalBuilder()
+          .setCustomId("embedify:builder")
+          .setTitle("Create an embed");
 
-    const channel = interaction.options.getChannel("channel");
-    if (!canSendEmbed(channel, interaction.guild)) {
+        const title = new TextInputBuilder()
+          .setCustomId("title")
+          .setLabel("Title (optional)")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(false)
+          .setMaxLength(256);
+
+        const description = new TextInputBuilder()
+          .setCustomId("description")
+          .setLabel("Description (optional)")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(false)
+          .setMaxLength(4000);
+
+        const color = new TextInputBuilder()
+          .setCustomId("color")
+          .setLabel("Hex color (optional, e.g. #5865F2)")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(false)
+          .setMaxLength(7);
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(title),
+          new ActionRowBuilder().addComponents(description),
+          new ActionRowBuilder().addComponents(color)
+        );
+        return interaction.showModal(modal);
+      }
+
+      const title = interaction.options.getString("title");
+      const description = interaction.options.getString(
+        subcommand === "announcement" ? "message" : "description"
+      );
+      const color = parseColor(interaction.options.getString("color"));
+
+      if (color === null) {
+        return interaction.reply({
+          content: "Please use a valid six-digit hex color, such as #5865F2.",
+          ephemeral: true
+        });
+      }
+
+      const embed = makeEmbed({ title, description, color });
+
+      if (subcommand === "preview") {
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      const channel = interaction.options.getChannel("channel");
+      if (!canSendEmbed(channel, interaction.guild)) {
+        return interaction.reply({
+          content: "I need **Send Messages** and **Embed Links** in that text channel.",
+          ephemeral: true
+        });
+      }
+
+      await channel.send({ embeds: [embed] });
       return interaction.reply({
-        content: "I need **Send Messages** and **Embed Links** in that text channel.",
+        content: subcommand === "announcement"
+          ? `Your announcement embed was posted in ${channel}.`
+          : `Your embed was sent to ${channel}.`,
         ephemeral: true
       });
     }
-
-    await channel.send({ embeds: [embed] });
-    return interaction.reply({
-      content: subcommand === "announcement"
-        ? `Your announcement embed was posted in ${channel}.`
-        : `Your embed was sent to ${channel}.`,
-      ephemeral: true
-    });
   }
 
   if (interaction.isModalSubmit() && interaction.customId === "embedify:builder") {
