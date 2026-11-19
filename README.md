@@ -1,16 +1,24 @@
 # Embedify
 
-Embedify is a public Discord bot for creating, customizing, and managing server embeds.
+Embedify is a public Discord bot dedicated to creating and publishing custom embeds. It is intentionally focused on embed-building features rather than general-purpose server commands.
 
-## Included in the first build
+## Embed commands
 
-- Interactive embed builder with private preview and send/cancel buttons
-- Create, preview, and send embed slash commands
-- Announcement and welcome embeds
-- Reaction-based polls
-- Server, member, role, channel, and avatar information
-- Help, bot information, ping, and invite commands
-- Permission checks for administrative actions
+- `/embed create` — open the interactive builder, preview your design, then send it with a button.
+- `/embed preview` — privately preview an embed with a title, description, and color.
+- `/embed send` — send a custom embed to a selected text channel.
+- `/embed announcement` — publish an announcement using an embed layout.
+
+## Planned embed-only features
+
+- Edit, duplicate, and delete saved embeds
+- Embed templates and reusable embed libraries
+- Author, footer, thumbnail, image, URL, timestamp, and field controls
+- Multi-embed messages
+- Buttons and dropdown menus attached to embeds
+- Reusable layouts and per-server embed settings
+
+No moderation, polls, tickets, verification, games, or general server-information commands are part of Embedify's scope.
 
 ## Requirements
 
@@ -32,7 +40,3 @@ For hosting, set `DISCORD_TOKEN` and `CLIENT_ID` as private environment variable
 ## Security
 
 Never share your bot token or commit it to GitHub. If a token is exposed, reset it in the Discord Developer Portal immediately.
-
-## Roadmap
-
-Advanced embed editing, saved templates, dropdown components, persistent server settings, scheduling, and additional server tools are next.
