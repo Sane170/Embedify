@@ -53,7 +53,13 @@ const commands = [
         .addStringOption((option) =>
           option.setName("message").setDescription("Announcement text").setRequired(true).setMaxLength(4000)
         )
-    )
+    ),
+  new SlashCommandBuilder()
+    .setName("help")
+    .setDescription("See Embedify's embed-building commands"),
+  new SlashCommandBuilder()
+    .setName("dashboard")
+    .setDescription("Open the official Embedify dashboard")
 ];
 
 module.exports = { commands };
