@@ -7,7 +7,14 @@ Embedify is a public Discord bot dedicated to creating and publishing custom emb
 - `/embed create` — open the interactive builder, preview your design, then send it with a button.
 - `/embed preview` — privately preview an embed with a title, description, and color.
 - `/embed send` — send a custom embed to a selected text channel.
-- `/embed announcement` — publish an announcement using an embed layout.
+- `/embed announcement` — publish an announcement using an embed layout, with an optional banner image.
+
+## Banner images
+
+- Add an optional `banner_image` HTTPS URL to `/embed preview`, `/embed send`, and `/embed announcement`.
+- `/embed create` also asks for an optional banner image URL in its interactive builder.
+- Embedify posts the banner image as its own message immediately before the embed, because Discord does not provide a native top-banner property inside a single embed.
+- Use a direct image URL ending in `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, or `.avif` (Discord CDN image URLs are also accepted).
 
 ## Planned embed-only features
 
