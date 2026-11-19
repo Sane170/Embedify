@@ -24,9 +24,9 @@ function parseBannerUrl(value) {
     const url = new URL(value.trim());
     if (url.protocol !== "https:") return null;
     const path = url.pathname.toLowerCase();
-    const isImage = /\\.(png|jpe?g|gif|webp|avif)$/.test(path) ||
-      /(^|\\.)cdn\\.discordapp\\.com$/.test(url.hostname) ||
-      /(^|\\.)media\\.discordapp\\.net$/.test(url.hostname);
+    const isImage = /\.(png|jpe?g|gif|webp|avif)$/.test(path) ||
+      /(^|\.)cdn\.discordapp\.com$/.test(url.hostname) ||
+      /(^|\.)media\.discordapp\.net$/.test(url.hostname);
     return isImage ? url.toString() : null;
   } catch {
     return null;
