@@ -20,6 +20,10 @@ Embedify is a public Discord bot dedicated to creating and publishing custom emb
 
 No moderation, polls, tickets, verification, games, or general server-information commands are part of Embedify's scope.
 
+## Repository layout
+
+All bot JavaScript files are kept in the repository root. There is no `src` folder.
+
 ## Requirements
 
 - Node.js 20 or newer
