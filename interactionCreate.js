@@ -18,6 +18,21 @@ function parseColor(value) {
   return Number.parseInt(normalized, 16);
 }
 
+function parseBannerUrl(value) {
+  if (!value) return null;
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== "https:") return null;
+    const path = url.pathname.toLowerCase();
+    const isImage = /\\.(png|jpe?g|gif|webp|avif)$/.test(path) ||
+      /(^|\\.)cdn\\.discordapp\\.com$/.test(url.hostname) ||
+      /(^|\\.)media\\.discordapp\\.net$/.test(url.hostname);
+    return isImage ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 function makeEmbed({ title, description, color }) {
   const embed = new EmbedBuilder().setColor(color).setTimestamp();
   if (title) embed.setTitle(title);
@@ -133,10 +148,18 @@ async function handleInteraction(interaction) {
           .setRequired(false)
           .setMaxLength(7);
 
+        const banner = new TextInputBuilder()
+          .setCustomId("banner_image")
+          .setLabel("Banner image URL (optional, HTTPS)")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(false)
+          .setMaxLength(500);
+
         modal.addComponents(
           new ActionRowBuilder().addComponents(title),
           new ActionRowBuilder().addComponents(description),
-          new ActionRowBuilder().addComponents(color)
+          new ActionRowBuilder().addComponents(color),
+          new ActionRowBuilder().addComponents(banner)
         );
         return interaction.showModal(modal);
       }
@@ -146,6 +169,11 @@ async function handleInteraction(interaction) {
         subcommand === "announcement" ? "message" : "description"
       );
       const color = parseColor(interaction.options.getString("color"));
+      const bannerImage = parseBannerUrl(interaction.options.getString("banner_image"));
+
+      if (interaction.options.getString("banner_image") && !bannerImage) {
+        return interaction.reply({ content: "Please use a direct HTTPS image URL ending in .png, .jpg, .jpeg, .gif, .webp, or .avif.", ephemeral: true });
+      }
 
       if (color === null) {
         return interaction.reply({
@@ -157,7 +185,7 @@ async function handleInteraction(interaction) {
       const embed = makeEmbed({ title, description, color });
 
       if (subcommand === "preview") {
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ content: bannerImage || undefined, embeds: [embed], ephemeral: true });
       }
 
       const channel = interaction.options.getChannel("channel");
@@ -168,6 +196,7 @@ async function handleInteraction(interaction) {
         });
       }
 
+      if (bannerImage) await channel.send({ content: bannerImage });
       await channel.send({ embeds: [embed] });
       return interaction.reply({
         content: subcommand === "announcement"
@@ -182,7 +211,13 @@ async function handleInteraction(interaction) {
     const title = interaction.fields.getTextInputValue("title").trim();
     const description = interaction.fields.getTextInputValue("description").trim();
     const rawColor = interaction.fields.getTextInputValue("color").trim();
+    const rawBanner = interaction.fields.getTextInputValue("banner_image").trim();
+    const bannerImage = parseBannerUrl(rawBanner);
     const color = parseColor(rawColor);
+
+    if (rawBanner && !bannerImage) {
+      return interaction.reply({ content: "Please use a direct HTTPS image URL ending in .png, .jpg, .jpeg, .gif, .webp, or .avif.", ephemeral: true });
+    }
 
     if (color === null) {
       return interaction.reply({
@@ -211,7 +246,7 @@ async function handleInteraction(interaction) {
     );
 
     return interaction.reply({
-      content: "Here's your embed preview.",
+      content: bannerImage || "Here's your embed preview.",
       embeds: [embed],
       components: [row],
       ephemeral: true
@@ -243,6 +278,8 @@ async function handleInteraction(interaction) {
         });
       }
 
+      const bannerImage = parseBannerUrl(interaction.message.content);
+      if (bannerImage) await interaction.channel.send({ content: bannerImage });
       await interaction.channel.send({ embeds: [EmbedBuilder.from(original)] });
       return interaction.update({
         content: "Your embed has been sent!",
