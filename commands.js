@@ -42,6 +42,9 @@ const commands = [
         .addStringOption((option) =>
           option.setName("color").setDescription("Hex color, for example #5865F2").setMaxLength(7)
         )
+        .addStringOption((option) =>
+          option.setName("banner_image").setDescription("HTTPS image URL to display above the embed").setMaxLength(500)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
